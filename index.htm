@@ -1,0 +1,186 @@
+
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YASIR  TANVEER SIM DATABASE</title>
+    
+    <meta name="google-site-verification" content="f96JuOe-CWzh5vm-NkMrXgo1tp3eyoaZLaBlSO6Umi4" />
+    
+    <style>
+        body {
+    font-family: 'Arial', sans-serif;
+    background: url('https://i.imgur.com/W0s17B9.jpeg') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+        h1 {
+            font-size: 28px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #00ffcc;
+            text-shadow: 0px 0px 15px rgba(0, 255, 204, 0.8);
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 0px 30px rgba(0, 255, 255, 0.7);
+            display: inline-block;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #00ffcc;
+            background: black;
+            color: white;
+            font-size: 16px;
+            border-radius: 25px;
+            text-align: center;
+            outline: none;
+            box-shadow: 0px 0px 10px rgba(0, 255, 204, 0.7);
+        }
+
+        button {
+            width: 90%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #ff00ff, #9900ff);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            margin-top: 10px;
+            box-shadow: 0px 0px 20px rgba(255, 0, 255, 0.7);
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #9900ff, #ff00ff);
+            box-shadow: 0px 0px 30px rgba(255, 0, 255, 1);
+        }
+
+        .response-box {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #00ffcc;
+            text-align: left;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0px 0px 20px rgba(0, 255, 204, 0.7);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: black;
+            color: white;
+            border: 2px solid #00ffcc;
+        }
+
+        th, td {
+            border: 1px solid #00ffcc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: #00ffcc;
+            color: black;
+        }
+
+        .error {
+            color: #ff4c4c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>YASIR TANVEER SIM DATABASE</h1>
+
+    <div class="container">
+        <input type="text" id="number" placeholder="Enter phone number" required>
+        <button id="fetchData">CONTINUE</button>
+<a href="https://wa.me/+923154376814" target="_blank" style="display: block; text-align: center; text-decoration: none; margin-top: 10px;">
+    <button style="background: #25D366; box-shadow: 0px 0px 20px rgba(37, 211, 102, 0.7);">
+        Contact on WhatsApp
+    </button>
+</a>
+    </div>
+
+    <div id="responseBox" class="response-box"></div>
+
+    <script>
+        document.getElementById("fetchData").addEventListener("click", async function() {
+            const number = document.getElementById("number").value;
+            if (number === "") {
+                alert("Please enter a valid number.");
+                return;
+            }
+
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://famofcfallxd.serv00.net/apis/simdataapi.php?num=${number}`)}`;
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                const apiData = JSON.parse(result.contents);
+
+                if (apiData.status === "success" && apiData.data.length > 0) {
+                    let tableHTML = `
+                        <table>
+                            <tr>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>CNIC</th>
+                                <th>Operator</th>
+                                <th>Address</th>
+                            </tr>`;
+
+                    apiData.data.forEach(user => {
+                        tableHTML += `
+                            <tr>
+                                <td>${user.Name}</td>
+                                <td>${user.Mobile}</td>
+                                <td>${user.CNIC}</td>
+                                <td>${user.Operator}</td>
+                                <td>${user.Address}</td>
+                            </tr>`;
+                    });
+
+                    tableHTML += `</table>`;
+                    document.getElementById("responseBox").innerHTML = tableHTML;
+                } else {
+                    document.getElementById("responseBox").innerHTML = `<strong class="error">❌ No data found for this number</strong>`;
+                }
+            } catch (error) {
+                document.getElementById("responseBox").innerHTML = `<strong class="error">❌ API Error: ${error.message}</strong>`;
+            }
+        });
+    </script>
+
+</body>
+</html>
