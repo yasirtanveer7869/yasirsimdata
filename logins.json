@@ -1,6 +1,4 @@
 [
-  {
-    "username": "admin",
-    "password": "$2y$10$KIXWkzLslf3/0KuB37xJQu4PtXtsTO0RhrYgUNMNB3K6YDRsjThW6"
-  }
+  { "username": "admin", "password": "1234" },
+  { "username": "yasir", "password": "mypassword" }
 ]
