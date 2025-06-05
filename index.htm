@@ -1,312 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Login | SIM Database</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js"></script>
-<script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js"></script>
+  <meta charset="UTF-8" />
+  <title>Login | SIM Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js"></script>
 
-<style>
-  body {
-    background-color: #f8f9fa;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  .centered {
-    max-width: 400px;
-    margin: 80px auto;
-    padding: 30px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  }
-  #responseBox .record-card {
-    background: #fff;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  .sidebar {
-    height: 100vh;
-    background: #343a40;
-    color: white;
-    padding: 1rem;
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 200px;
-    display: none;
-    z-index: 1050;
-  }
-  .sidebar a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    margin: 1rem 0;
-  }
-  .main-content {
-    margin-left: 0;
-    transition: margin-left 0.3s ease;
-  }
-  .main-content.shifted {
-    margin-left: 200px;
-  }
-  /* Admin panel toggle */
-  #adminPanelToggle {
-    margin-bottom: 15px;
-  }
-</style>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .centered {
+      max-width: 400px;
+      margin: 80px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .record-card {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
 <body>
-  <div class="container mt-4">
-    <h1 class="text-center mb-4 text-primary">📱 Yasir SIM DATABASE</h1>
+<div class="container mt-4">
+  <h1 class="text-center mb-4 text-primary">📱 Yasir SIM DATABASE</h1>
 
-    <div id="authSection" class="mb-3">
-      <!-- Login form -->
-      <div id="loginForm" class="mb-3">
-        <input type="email" id="emailInput" class="form-control mb-2" placeholder="Email" />
-        <input type="password" id="passwordInput" class="form-control mb-2" placeholder="Password" />
-        <button id="loginBtn" class="btn btn-primary w-100 mb-2">Login</button>
-        <button id="registerBtn" class="btn btn-outline-secondary w-100">Register</button>
-      </div>
-      <!-- Logout button -->
-      <div id="logoutSection" class="d-none">
-        <span id="userEmail" class="me-2"></span>
-        <button id="logoutBtn" class="btn btn-danger btn-sm">Logout</button>
-      </div>
+  <!-- Auth -->
+  <div id="authSection">
+    <div id="loginForm">
+      <input type="email" id="emailInput" class="form-control mb-2" placeholder="Email" />
+      <input type="password" id="passwordInput" class="form-control mb-2" placeholder="Password" />
+      <button id="loginBtn" class="btn btn-primary w-100 mb-2">Login</button>
+      <button id="registerBtn" class="btn btn-outline-secondary w-100">Register</button>
     </div>
-
-    <!-- Search area -->
-    <div id="searchSection" class="d-none">
-      <div class="mb-3">
-        <input type="text" id="num" class="form-control text-center" placeholder="Enter Number or CNIC" />
-      </div>
-      <div class="d-grid gap-2 mb-4">
-        <button id="fetchData" class="btn btn-success">Search</button>
-      </div>
-      <div id="responseBox" class="mb-4"></div>
-    </div>
-
-    <!-- Admin Panel Toggle -->
-    <button id="adminPanelToggle" class="btn btn-warning d-none">Toggle Admin Panel</button>
-
-    <!-- Admin Panel -->
-    <div id="adminPanel" class="card d-none">
-      <div class="card-header bg-warning text-dark">
-        <h4 class="mb-0">Admin Panel - User Management</h4>
-      </div>
-      <div class="card-body p-3" style="max-height: 400px; overflow-y: auto;">
-        <table class="table table-striped table-bordered align-middle mb-0">
-          <thead class="table-warning">
-            <tr>
-              <th>Email</th>
-              <th>Approved</th>
-              <th>Role</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody"></tbody>
-        </table>
-      </div>
+    <div id="logoutSection" class="d-none">
+      <span id="userEmail" class="me-2"></span>
+      <button id="logoutBtn" class="btn btn-danger btn-sm">Logout</button>
     </div>
   </div>
 
+  <!-- Search -->
+  <div id="searchSection" class="d-none mt-4">
+    <input type="text" id="num" class="form-control text-center" placeholder="Enter Number or CNIC" />
+    <button id="fetchData" class="btn btn-success w-100 mt-2">Search</button>
+    <div id="responseBox" class="mt-3"></div>
+  </div>
+
+  <!-- Admin -->
+  <button id="adminPanelToggle" class="btn btn-warning mt-4 d-none">Toggle Admin Panel</button>
+  <div id="adminPanel" class="card d-none mt-2">
+    <div class="card-header bg-warning text-dark">
+      <h4 class="mb-0">Admin Panel</h4>
+    </div>
+    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+      <table class="table table-striped table-bordered align-middle">
+        <thead class="table-warning">
+        <tr><th>Email</th><th>Approved</th><th>Role</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-  import { getDatabase, ref, set, get, child, update, onValue } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  deleteUser as firebaseDeleteUser
+} from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  update,
+  remove
+} from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDEJig18F3LY8UOcMa4l7uK9FkGwDYtA2Y",
-    authDomain: "sim-database-bf915.firebaseapp.com",
-    databaseURL: "https://sim-database-bf915-default-rtdb.firebaseio.com",
-    projectId: "sim-database-bf915",
-    storageBucket: "sim-database-bf915.appspot.com",
-    messagingSenderId: "609545113124",
-    appId: "1:609545113124:web:82c8a19528aa74387d12b1",
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDEJig18F3LY8UOcMa4l7uK9FkGwDYtA2Y",
+  authDomain: "sim-database-bf915.firebaseapp.com",
+  databaseURL: "https://sim-database-bf915-default-rtdb.firebaseio.com",
+  projectId: "sim-database-bf915",
+  storageBucket: "sim-database-bf915.appspot.com",
+  messagingSenderId: "609545113124",
+  appId: "1:609545113124:web:82c8a19528aa74387d12b1"
+};
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-  // DOM Elements
-  const emailInput = document.getElementById('emailInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const registerBtn = document.getElementById('registerBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userEmail = document.getElementById('userEmail');
-  const loginForm = document.getElementById('loginForm');
-  const logoutSection = document.getElementById('logoutSection');
-  const searchSection = document.getElementById('searchSection');
-  const adminPanel = document.getElementById('adminPanel');
-  const adminPanelToggle = document.getElementById('adminPanelToggle');
-  const userTableBody = document.getElementById('userTableBody');
+// Elements
+const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userEmail = document.getElementById('userEmail');
+const loginForm = document.getElementById('loginForm');
+const logoutSection = document.getElementById('logoutSection');
+const searchSection = document.getElementById('searchSection');
+const adminPanelToggle = document.getElementById('adminPanelToggle');
+const adminPanel = document.getElementById('adminPanel');
+const userTableBody = document.getElementById('userTableBody');
 
-  let currentUserData = null;
+let currentUserData = null;
 
-  // Register user
-  registerBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    if (!email || !password) {
-      alert('Please enter email and password');
-      return;
-    }
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        // Add user data to realtime database
-        set(ref(db, 'users/' + user.uid), {
-          email: email,
-          approved: false,
-          role: 'user',
-          registeredAt: Date.now(),
-        });
-        alert('Registration successful! Wait for admin approval.');
-        emailInput.value = '';
-        passwordInput.value = '';
-      })
-      .catch(error => {
-        alert('Error: ' + error.message);
-      });
-  });
-
-  // Login user
-  loginBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    if (!email || !password) {
-      alert('Please enter email and password');
-      return;
-    }
-    signInWithEmailAndPassword(auth, email, password)
-      .catch(error => alert('Login failed: ' + error.message));
-  });
-
-  // Logout
-  logoutBtn.addEventListener('click', () => {
-    signOut(auth);
-  });
-
-  // Monitor auth state
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      // Fetch user data from Realtime DB
-      get(ref(db, 'users/' + user.uid)).then(snapshot => {
-        if (snapshot.exists()) {
-          currentUserData = snapshot.val();
-
-          if (!currentUserData.approved) {
-            alert('Your account is not approved by admin yet.');
-            signOut(auth);
-            return;
-          }
-          // Show logged in UI
-          loginForm.classList.add('d-none');
-          logoutSection.classList.remove('d-none');
-          searchSection.classList.remove('d-none');
-          userEmail.textContent = user.email;
-
-          // Show admin controls if admin
-          if (currentUserData.role === 'admin') {
-            adminPanelToggle.classList.remove('d-none');
-            adminPanel.classList.add('d-none'); // initially hidden
-            loadUsers();
-          } else {
-            adminPanelToggle.classList.add('d-none');
-            adminPanel.classList.add('d-none');
-          }
-
-        } else {
-          alert('No user data found, contact admin.');
-          signOut(auth);
-        }
-      });
-    } else {
-      // Not logged in
-      currentUserData = null;
-      loginForm.classList.remove('d-none');
-      logoutSection.classList.add('d-none');
-      searchSection.classList.add('d-none');
-      adminPanelToggle.classList.add('d-none');
-      adminPanel.classList.add('d-none');
-      userEmail.textContent = '';
-    }
-  });
-
-  // Toggle Admin Panel
-  adminPanelToggle.addEventListener('click', () => {
-    adminPanel.classList.toggle('d-none');
-  });
-
-  // Load all users for admin panel
-  function loadUsers() {
-    userTableBody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
-    get(ref(db, 'users')).then(snapshot => {
-      if (snapshot.exists()) {
-        const users = snapshot.val();
-        userTableBody.innerHTML = '';
-        Object.entries(users).forEach(([uid, user]) => {
-          const tr = document.createElement('tr');
-
-          const emailTd = document.createElement('td');
-          emailTd.textContent = user.email || '-';
-
-          const approvedTd = document.createElement('td');
-          approvedTd.textContent = user.approved ? '✅' : '❌';
-
-          const roleTd = document.createElement('td');
-          roleTd.textContent = user.role || 'user';
-
-          const actionsTd = document.createElement('td');
-          // Approve/Disapprove button
-          const approveBtn = document.createElement('button');
-          approveBtn.className = user.approved ? 'btn btn-sm btn-outline-danger me-2' : 'btn btn-sm btn-outline-success me-2';
-          approveBtn.textContent = user.approved ? 'Disapprove' : 'Approve';
-          approveBtn.onclick = () => toggleApproval(uid, !user.approved);
-
-          // Role toggle button (user/admin)
-          const roleBtn = document.createElement('button');
-          roleBtn.className = user.role === 'admin' ? 'btn btn-sm btn-warning' : 'btn btn-sm btn-secondary';
-          roleBtn.textContent = user.role === 'admin' ? 'Make User' : 'Make Admin';
-          roleBtn.onclick = () => toggleRole(uid, user.role === 'admin' ? 'user' : 'admin');
-
-          actionsTd.appendChild(approveBtn);
-          actionsTd.appendChild(roleBtn);
-
-          tr.appendChild(emailTd);
-          tr.appendChild(approvedTd);
-          tr.appendChild(roleTd);
-          tr.appendChild(actionsTd);
-
-          userTableBody.appendChild(tr);
-        });
-      } else {
-        userTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No users found</td></tr>';
-      }
+// Register
+registerBtn.onclick = () => {
+  const email = emailInput.value.trim();
+  const pass = passwordInput.value.trim();
+  if (!email || !pass) return alert("Email and password required.");
+  createUserWithEmailAndPassword(auth, email, pass).then(userCred => {
+    set(ref(db, 'users/' + userCred.user.uid), {
+      email,
+      approved: false,
+      role: 'user',
+      registeredAt: Date.now()
     });
+    alert("Registered! Wait for admin approval.");
+  }).catch(err => alert(err.message));
+};
+
+// Login
+loginBtn.onclick = () => {
+  const email = emailInput.value.trim();
+  const pass = passwordInput.value.trim();
+  if (!email || !pass) return alert("Email and password required.");
+  signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Login failed: " + err.message));
+};
+
+// Logout
+logoutBtn.onclick = () => signOut(auth);
+
+// Auth State
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    loginForm.classList.remove("d-none");
+    logoutSection.classList.add("d-none");
+    searchSection.classList.add("d-none");
+    adminPanelToggle.classList.add("d-none");
+    adminPanel.classList.add("d-none");
+    userEmail.textContent = "";
+    return;
   }
 
-  // Toggle approval status
-  function toggleApproval(uid, approve) {
-    update(ref(db, 'users/' + uid), { approved: approve })
-      .then(() => loadUsers())
-      .catch(e => alert('Error updating approval: ' + e.message));
-  }
+  get(ref(db, 'users/' + user.uid)).then(snapshot => {
+    if (!snapshot.exists()) return signOut(auth);
+    currentUserData = snapshot.val();
+    if (!currentUserData.approved) {
+      alert("Account not approved.");
+      signOut(auth);
+      return;
+    }
 
-  // Toggle user role
-  function toggleRole(uid, newRole) {
-    update(ref(db, 'users/' + uid), { role: newRole })
-      .then(() => loadUsers())
-      .catch(e => alert('Error updating role: ' + e.message));
-  }
+    loginForm.classList.add("d-none");
+    logoutSection.classList.remove("d-none");
+    searchSection.classList.remove("d-none");
+    userEmail.textContent = user.email;
+
+    if (currentUserData.role === 'admin') {
+      adminPanelToggle.classList.remove("d-none");
+      loadUsers();
+    }
+  });
+});
+
+// Toggle Admin Panel
+adminPanelToggle.onclick = () => adminPanel.classList.toggle("d-none");
+
+// Load Users
+function loadUsers() {
+  userTableBody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+  get(ref(db, 'users')).then(snapshot => {
+    if (!snapshot.exists()) return userTableBody.innerHTML = "<tr><td colspan='4'>No users found.</td></tr>";
+    userTableBody.innerHTML = "";
+    const users = snapshot.val();
+    Object.entries(users).forEach(([uid, data]) => {
+      const isCurrentAdmin = uid === auth.currentUser.uid;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${data.email}</td>
+        <td>${data.approved ? "✅" : "❌"}</td>
+        <td>${data.role}</td>
+        <td>
+          <button class="btn btn-sm ${data.approved ? 'btn-danger' : 'btn-success'} me-1"
+            ${isCurrentAdmin ? "disabled" : ""}
+            title="${isCurrentAdmin ? "Cannot modify self" : ""}"
+            onclick="toggleApproval('${uid}', ${!data.approved})">
+            ${data.approved ? "Disapprove" : "Approve"}
+          </button>
+          <button class="btn btn-sm ${data.role === 'admin' ? 'btn-warning' : 'btn-secondary'} me-1"
+            ${isCurrentAdmin ? "disabled" : ""}
+            title="${isCurrentAdmin ? "Cannot change own role" : ""}"
+            onclick="toggleRole('${uid}', '${data.role === 'admin' ? 'user' : 'admin'}')">
+            ${data.role === 'admin' ? "Make User" : "Make Admin"}
+          </button>
+          <button class="btn btn-sm btn-danger"
+            ${isCurrentAdmin ? "disabled" : ""}
+            title="${isCurrentAdmin ? "Cannot delete yourself" : ""}"
+            onclick="deleteUser('${uid}')">
+            Delete
+          </button>
+        </td>
+      `;
+      userTableBody.appendChild(tr);
+    });
+    [...document.querySelectorAll('[title]')].forEach(el => new bootstrap.Tooltip(el));
+  });
+}
+
+// Actions
+window.toggleApproval = (uid, status) => {
+  update(ref(db, 'users/' + uid), { approved: status }).then(loadUsers);
+};
+
+window.toggleRole = (uid, role) => {
+  update(ref(db, 'users/' + uid), { role }).then(loadUsers);
+};
+
+window.deleteUser = (uid) => {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+  remove(ref(db, 'users/' + uid)).then(loadUsers).catch(e => alert(e.message));
+};
+
 
   // SIM Database Search logic (your existing)
   const fetchDataBtn = document.getElementById("fetchData");
