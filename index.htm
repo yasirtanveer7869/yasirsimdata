@@ -2,113 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SIM Database Login</title>
+  <title>Login | SIM Database</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <style>
-    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    .centered { max-width: 400px; margin: 50px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-    .hidden { display: none; }
-    #responseBox .record-card {
-      background: #fff; padding: 15px; margin-bottom: 10px;
-      border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-  </style>
-</head>
-<body>
-
-  <div class="centered" id="authBox">
-    <h4 class="text-center mb-4">🔐 SIM Database Login</h4>
-    <input type="email" id="email" class="form-control mb-2" placeholder="Email" />
-    <input type="password" id="password" class="form-control mb-2" placeholder="Password" />
-    <div class="d-grid gap-2">
-      <button id="loginBtn" class="btn btn-primary">Login</button>
-      <button id="registerBtn" class="btn btn-secondary">Register</button>
-    </div>
-    <p class="text-center text-danger mt-2" id="authMsg"></p>
-  </div>
-
-  <div class="container hidden" id="mainApp">
-    <h3 class="text-center text-primary my-3">📱 Yasir SIM DATABASE</h3>
-    <div class="mb-3">
-      <input type="text" id="num" class="form-control text-center" placeholder="Enter Number or CNIC" />
-    </div>
-    <div class="d-grid gap-2">
-      <button id="fetchData" class="btn btn-success">Search</button>
-      <button id="logoutBtn" class="btn btn-danger">Logout</button>
-    </div>
-    <div id="responseBox" class="mt-4 mb-4"></div>
-  </div>
-
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDEJig18F3LY8UOcMa4l7uK9FkGwDYtA2Y",
       authDomain: "sim-database-bf915.firebaseapp.com",
-      databaseURL: "https://sim-database-bf915-default-rtdb.firebaseio.com",
       projectId: "sim-database-bf915",
       storageBucket: "sim-database-bf915.appspot.com",
       messagingSenderId: "609545113124",
-      appId: "1:609545113124:web:82c8a19528aa74387d12b1",
-      measurementId: "G-QR3T3WZM0E"
+      appId: "1:609545113124:web:82c8a19528aa74387d12b1"
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getDatabase();
+    const auth = getAuth(app);
+    const db = getDatabase(app);
 
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const registerBtn = document.getElementById("registerBtn");
-    const authMsg = document.getElementById("authMsg");
-    const authBox = document.getElementById("authBox");
-    const mainApp = document.getElementById("mainApp");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    registerBtn.onclick = () => {
-      const email = emailInput.value;
-      const password = passwordInput.value;
+    document.getElementById("registerBtn").onclick = () => {
+      const email = prompt("Enter Email:");
+      const password = prompt("Enter Password (6+ chars):");
+      if (!email || !password) return alert("Email and password required.");
       createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        .then(userCredential => {
           const uid = userCredential.user.uid;
           set(ref(db, 'users/' + uid), {
             email: email,
-            registeredAt: new Date().toISOString()
+            approved: false
           });
-          authMsg.textContent = "✅ Registered successfully. Please login.";
-        })
-        .catch((error) => {
-          authMsg.textContent = error.message;
-        });
+          alert("Registered. Await admin approval.");
+        }).catch(err => alert(err.message));
     };
 
-    loginBtn.onclick = () => {
-      const email = emailInput.value;
-      const password = passwordInput.value;
+    document.getElementById("loginBtn").onclick = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
       signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          authBox.classList.add("hidden");
-          mainApp.classList.remove("hidden");
-        })
-        .catch((error) => {
-          authMsg.textContent = error.message;
-        });
+        .then(userCredential => {
+          const uid = userCredential.user.uid;
+          get(child(ref(db), 'users/' + uid)).then(snapshot => {
+            if (snapshot.exists() && snapshot.val().approved) {
+              document.getElementById("loginBox").style.display = "none";
+              document.getElementById("appBox").style.display = "block";
+            } else {
+              signOut(auth);
+              alert("Not approved by admin.");
+            }
+          });
+        }).catch(err => alert(err.message));
     };
 
-    logoutBtn.onclick = () => {
+    document.getElementById("logoutBtn").onclick = () => {
       signOut(auth).then(() => {
-        mainApp.classList.add("hidden");
-        authBox.classList.remove("hidden");
+        document.getElementById("appBox").style.display = "none";
+        document.getElementById("loginBox").style.display = "block";
       });
     };
+  </script>
+  <style>
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+    .centered { max-width: 400px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .record-card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div id="loginBox" class="centered">
+    <h3 class="text-center text-primary">📱 SIM Database Login</h3>
+    <input type="email" id="email" class="form-control mb-2" placeholder="Email" />
+    <input type="password" id="password" class="form-control mb-2" placeholder="Password" />
+    <button class="btn btn-success w-100 mb-2" id="loginBtn">Login</button>
+    <button class="btn btn-secondary w-100" id="registerBtn">Register</button>
+  </div>
 
-    // SIM Search Function
+  <div id="appBox" style="display:none;" class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <h4 class="text-primary">📱 Yasir SIM DATABASE</h4>
+      <button class="btn btn-danger btn-sm" id="logoutBtn">Logout</button>
+    </div>
+    <div class="my-3">
+      <input type="text" id="num" class="form-control text-center" placeholder="Enter Number or CNIC" />
+      <button id="fetchData" class="btn btn-success w-100 mt-2">Search</button>
+    </div>
+    <div id="responseBox" class="mt-4 mb-4"></div>
+  </div>
+
+  <script>
     document.getElementById("fetchData").addEventListener("click", async () => {
       const input = document.getElementById("num");
       const num = input.value.trim();
@@ -156,15 +139,15 @@
       }
     });
 
-    // Share Record
-    window.shareRecord = function (btn) {
-      html2canvas(btn.parentElement).then(canvas => {
+    function shareRecord(btn) {
+      const card = btn.closest(".record-card");
+      html2canvas(card).then(canvas => {
         const link = document.createElement("a");
-        link.href = canvas.toDataURL("image/png");
-        link.download = "sim_record.png";
+        link.download = "record.png";
+        link.href = canvas.toDataURL();
         link.click();
       });
-    };
+    }
   </script>
 </body>
 </html>
