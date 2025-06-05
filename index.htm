@@ -136,7 +136,7 @@ registerBtn.onclick = () => {
       role: 'user',
       registeredAt: Date.now()
     });
-    alert("Registered! Wait for admin approval.");
+    alert("Registered! Contact to admin to Active your Account: 0315-4376814.");
   }).catch(err => alert(err.message));
 };
 
@@ -167,7 +167,7 @@ onAuthStateChanged(auth, user => {
     if (!snapshot.exists()) return signOut(auth);
     currentUserData = snapshot.val();
     if (!currentUserData.approved) {
-      alert("Account not approved.");
+      alert("Account not approved Contact Admin 0315-4376814.");
       signOut(auth);
       return;
     }
